@@ -4,6 +4,7 @@
 	<meta charset="UTF-8">
 	<title>排序</title>
 	<script src="datas.js"></script>
+	<script src="unicode.js"></script>
 	<style>
 		*{
 			padding: 0;
@@ -17,10 +18,9 @@
 	    	list-style: none;
 	    }
 		.content{
-            width: 300px;
-            height: 400px;
-            overflow-y: scroll;
-            border: 1px solid #000;
+        width: 300px;
+        height: 400px;
+        border: 1px solid #000;
 	    	margin: 0 auto;
 	    	position: relative;
 		}
@@ -42,6 +42,11 @@
 		.letter>li{
 			width: 20px;
 			text-align: center;
+			cursor: pointer;
+		}
+		.letter>li:active{
+			background-color: skyblue;
+			color: #fff;
 		}
 		.listBox{
 			width: calc(100% - 21px);
@@ -50,18 +55,20 @@
 			top: 0;
 			left: 0;
 			z-index: 2;
+      overflow-y: scroll;
 		}
 		.singleLetter{
 			line-height: 40px;
 			border-bottom: 1px solid #999;
 			background-color: #f2f2f2;
 			text-indent: 1em;
-
 		}
 		.List>li{
-            line-height: 30px;
-            text-indent: 1em;
-            border-bottom: 1px solid #f1f1f1;
+      line-height: 30px;
+      height: 30px;
+      text-indent: 1em;
+      border-bottom: 1px solid #f1f1f1;
+      overflow: hidden;
 		}
 	</style>
 </head>
@@ -74,7 +81,7 @@
 		
 		<div class="listBox">
 			<div class="singleContent">
-				<div class="singleLetter">A</div>
+				<!-- <div class="singleLetter">A</div>
 				<ul class="List">
 					<li class="name">安庆</li>
 					<li class="name">Anta</li>
@@ -86,7 +93,7 @@
 					<li class="name">北京</li>
 					<li class="name">Before</li>
 				</ul>
-			</div>
+			</div> -->
 
 		</div>
 	</div>
@@ -94,51 +101,160 @@
 </html>
 <script>
 //遍历右侧字母
+var datas = datasJson();
+var unicodes = chinese();
 (function(){
-   var letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","#"];
-   var element = [];
-   function letterScroll(name){
+   function letterScroll(name,letters){
    	  this.Box = document.querySelector(name);
-   	  
+   	  this.letters = letters;
+   	  this.init();
    }
    letterScroll.prototype.init = function(){//创建字母
-   	   for(var i=0; i<letters.length;i++){
+   	   for(var i=0; i<this.letters.length;i++){
           var alphabet = document.createElement("li");//创建节点
-          var node = document.createTextNode(letters[i]);
+          var node = document.createTextNode(this.letters[i]);
           alphabet.appendChild(node);
           this.Box.appendChild(alphabet);//加入父元素
+          this.Box.children[i].index = i;
+          this.Box.children[i].onclick = function(){
+          	console.log(this.index)
+          }
    	   }
-   }
-   letterScroll.prototype.click = function(){
-   	   this.init();
-   	   var page = this.Box.children
-   	   for(var i=0;i<page.length;i++){//两种解决办法
-   	   	 page[i].index = i;
-   	   	 page[i].onclick = function(){
-   	   	 	//console.log(this.innerHTML)
-   	   	 	console.log(this.index)
-   	   	 }
-   	   	 // (function(i){
-         //    page[i].onclick = function(){
-         //    	    console.log(this.innerHTML)
-   	   	 //     	console.log(i)
-         //    } 
-   	   	 // }(i))
-   	   }
-   	   
    }
    window.letterScroll = letterScroll;
 }());
-var letterScroll = new letterScroll(".letter");
-   letterScroll.click();
-   
+//var letterScroll = new letterScroll(".letter",letters);
+   //letterScroll.click();
+
+
+
+
+
+
+//处理数据
 (function(){
-   var datas = datasJson();
-   console.log(datas);
-   function sortArray(datas){
+   function sortArray(datas,unicodes){
    	this.datas = datas;
+   	this.unicodes = unicodes;
+   	//console.log(this.letters);
+   	this.deal();
    }
-   
+   sortArray.prototype.init = function(){//初始化
+     this.sorts();
+   }
+   sortArray.prototype.init = function(){//获取到className
+   	var goods = this.datas.goods;
+   	for(var i=0;i<goods.length;i++){
+   	 	goods[i].chinese = this.pySegSort(goods[i].className);
+   	 }
+   	 return goods;
+   }
+   sortArray.prototype.pySegSort = function(className){
+   	 var len = className.length;
+   	 var reg = new RegExp('[^0-9a-zA-Z]');
+   	 var done = "";
+   	 for(var i=0;i<len;i++){
+   	 	var val = className.substr(i,1);//分割每个字
+   	 	var Names = this.change(val,this.unicodes);//传入查找有无汉字
+   	 	if(reg.test(val)){//除数字字母外的字符换成'-'
+   	 		val = '-';
+   	 	}
+   	 	if(Names!==false){
+   	 		done += Names;
+   	 	}else{
+   	 		done += val;
+   	 	}
+   	 }
+   	 done = done.replace(/[0-9]/g,'#');//数字换成#
+   	 while(done.indexOf("##")>=0){
+   	 	done = done.replace("##",'#');
+   	 }
+   	 while(done.indexOf("--")>=0){
+   	 	done = done.replace("--",'-');
+   	 }
+   	 return done;
+   }
+   sortArray.prototype.change = function(val,unicodes){//判断有无这个字
+     for(var cell in unicodes){
+     	if(unicodes[cell].indexOf(val)!=-1){
+     		return cell;
+     	}
+     }
+     return false;
+   }
+   sortArray.prototype.deal = function(){//字段处理
+      var goods = this.init();
+      var arr = [];
+      var letter = [];
+      var element = {};
+      //console.log(goods);
+      for(var i=0;i<goods.length;i++){//拿出首字母
+         arr.push(goods[i].chinese[0].toUpperCase());
+      }
+      for(var i=0;i<arr.length;i++){//数组去重
+      	if(letter.indexOf(arr[i])==-1){
+      		letter.push(arr[i]);
+      	}
+      }
+      letter.sort(function(a,b){//排序
+      	return a.localeCompare(b);
+      })
+      for(var j=0;j<letter.length;j++){//将原始数据分类存入
+      	  element[letter[j]]= [];
+          for(var i=0;i<arr.length;i++){
+      		if(letter[j].indexOf(arr[i])>=0){
+      		 element[letter[j]].push(goods[i]);
+      	   }
+      	}
+      }
+      return {element,letter};
+   }
+   window.sortArray = sortArray;
 }());
+  //var sortArray = new sortArray(datas,letters,unicodes);
+
+
+(function(){
+   function romance(name,name2,datas,unicodes){//综合
+   	  this.contents = new sortArray(datas,unicodes);
+      var letters = this.contents.deal().letter;
+     // console.log(this.contents.deal());
+      this.nav = new letterScroll(name,letters);
+      this.BoxName = document.querySelector(name2);
+      this.init();
+   }
+   romance.prototype.init = function(){//创建内容
+      var body = this.contents.deal().element;
+      for(key in body){
+          var alphabet = document.createElement("div");//创建盒子节点
+          alphabet.classList.add("singleContent");//加类名
+          this.BoxName.appendChild(alphabet);
+
+          var alphabet1 = document.createElement("div");//创建子节点
+          var node = document.createTextNode(key);//创建孙节点内容
+          alphabet1.classList.add("singleLetter");//加类名
+          alphabet1.appendChild(node);//把内容放入
+          alphabet.appendChild(alphabet1);//把节点放入
+         
+          var alphabet2 = document.createElement("ul");//创建子节点
+          alphabet2.classList.add("List");//加类名
+          alphabet.appendChild(alphabet2);//把节点放入
+          //console.log(body[key]);
+          for(var j=0;j<body[key].length;j++){
+          	 var alphabet3 = document.createElement("li");//创建孙节点
+             var node = document.createTextNode(body[key][j].className);//创建孙节点内容
+             alphabet3.classList.add("name");//加类名
+             alphabet3.appendChild(node);//把内容放入
+             alphabet2.appendChild(alphabet3);//把节点放入
+          }
+      }
+   } 
+  
+
+
+
+   window.romance = romance;
+}());
+  var romance = new romance(".letter",".listBox",datas,unicodes)
 
 </script>
