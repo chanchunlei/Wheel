@@ -74,7 +74,7 @@
       	   }
       	}
       }
-      return {element,letter};
+      return {element:element,letter:letter};
    }
    window.sortArray = sortArray;
 }());

@@ -28,11 +28,12 @@
           var num = now.offsetTop - this.ListBox.scrollTop;//移动距离
           var start = this.ListBox.scrollTop;//开始
           var end = now.offsetTop;//结束
-          var r = 30;//移动距离
+          var r = 20;//每次移动距离
           var t = 0;//参量
           var timer = setInterval(function(){
             t++;
-            this.ListBox.scrollTop = num/r*t+start;
+            console.log(1);
+            this.ListBox.scrollTop = num/r*t+start;//(距离/每次移动距离*参量)+开始点
             if(num>0 && end - this.ListBox.scrollTop<=0){
                 clearInterval(timer);
                 this.run = true;
@@ -40,7 +41,7 @@
                 clearInterval(timer);
                 this.run = true;
             }
-          }.bind(this),10);
+          }.bind(this),20);
         }else{
           return false;
         }
