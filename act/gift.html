@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>礼物交换活动</title>
+	<script src="./jquery.min.js"></script>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		.container{
+			max-width: 1400px;
+			margin-top: 30px;
+			display: flex;
+			justify-content: space-around;
+		}
+		.ranking{
+			height: 500px;
+			overflow-y:scroll; 
+			border: 1px solid #ccc;
+			border-radius: 5px;
+			width: 400px;
+		}
+		.giftNum{
+			line-height: 35px;
+			text-align: center;
+			border-bottom: 1px solid #f1f1f1; 
+		}
+		.submit,.again{
+			padding: 5px 10px;
+			outline-style: none;
+		}
+		.list{
+			padding-left: 30px;
+			box-sizing: border-box;
+            
+		}
+		.list>h3{
+			text-align: center;
+			line-height: 50px;
+		}
+		.random{
+			width: 800px;
+			height: 500px;
+			text-align: center;
+		}
+		.random>h1{
+			background-color: #494949;
+			color: #fff;
+			line-height: 80px;
+		}
+		.numberR{
+			font-size: 170px;
+			line-height: 370px;
+			background-color: #009BFF;
+			color: #fff;
+		}
+		.inp{
+			background-color: #494949;
+			line-height: 50px;
+		}
+		.inp>input{
+			margin: 0 8px;
+			padding: 12px;
+			font-size: 20px;
+
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="ranking">
+			<div class="giftNum">
+				<label for="num">礼物数量：</label>
+				<input type="number" id="num">
+				<input class="submit" type="button" value="确定">
+				<input class="again" type="button" value="重置">
+			</div>
+			<div class="list">
+				<h3>号码名单</h3>
+				<ul class="listName">
+				</ul>
+			</div>
+		</div>
+		<div class="random">
+			<h1>抽取随机号</h1>
+			<div class="numberR">00</div>
+			<div class="inp">
+				<input type="button" class="start" value="开始">
+				<input type="button" class="stop" disabled="disabled" value="停止">
+			</div>
+		</div>
+	</div>
+	<script>
+		$(function(){
+           var gitnum = 0;
+           var o = 0;
+           var timer;
+           var arr = [];
+           var list = [];//名单
+		   	var objs = {
+		   		name: '',
+		   		id: 0
+		   	}
+           var n = localStorage.getItem('num');
+           var defaults = JSON.parse(localStorage.getItem('nameList'));
+           var arrLocal = localStorage.getItem('arrs');
+           if(defaults){
+           	//console.log(defaults);
+           	list = defaults;
+           	$(defaults).each(function(index,ele){
+           		$('.listName').append("<li><span>"+ele.name+"：</spna> <span>"+ele.id+"</spna></li>");
+           	})
+           }
+           if(n){
+             $('#num').val(n);
+             $('.submit').attr("disabled","disabled");
+             gitnum = n;
+             if(arrLocal){
+	           	arr = arrLocal.split(',');
+	           	$(arr).each(function(index){
+                  arr[index] = Number(arr[index]);
+                })
+	         }else{
+	         	for(var i = 0; i < gitnum; i++){
+		            arr.push(i+1);
+		       	}
+	         }
+           }
+           $('.submit').click(function(){//确定
+           	 if($('#num').val()>0){
+           	 	gitnum = $('#num').val();
+           	 	$(this).attr("disabled","disabled");
+           	 	localStorage.setItem('num', gitnum);
+           	 	if(gitnum > 0){
+		       	  for(var i = 0; i < gitnum; i++){
+		             arr.push(i+1);
+		       	  }
+	           	}
+           	 }
+           });
+            $('.again').click(function(){//重置
+            	localStorage.removeItem('num');
+           	 	localStorage.removeItem('arrs');
+           	 	localStorage.removeItem('nameList');
+           	 	$(".submit").removeAttr("disabled");
+           	 	$('.listName').remove();
+           	 	arr = [];
+           	 	list = [];
+           	 	$('#num').val(0);
+           });
+           $('.start').click(function(){ //开始
+           	if(arr.length==0){
+           		alert('请输入数量！');
+           		return false;
+           	}
+           	var name = prompt("请输入你的名字！");
+           	 if (name!=null && name!=""){
+	           //document.write("你好，" + name + "！今天过得好吗？");
+	            objs.name = name;
+	           	timer = setInterval(function(){
+	           		var f = Math.floor(Math.random()*arr.length);
+	                $('.numberR').text(arr[f]);
+	                objs.id = arr[f];
+                    o = f;
+	           	},60);
+	           	$(this).attr("disabled","disabled");
+              	$(".stop").removeAttr("disabled");
+              }else{
+              	alert("你没有输入名字！")
+              }
+            })
+            $('.stop').click(function(){
+            clearInterval(timer);
+            list.push(JSON.parse(JSON.stringify(objs)));
+            console.log(list)
+            $('.listName').append("<li><span>"+objs.name+"：</spna> <span>"+objs.id+"</spna></li>");
+            arr.splice(o,1);
+            localStorage.setItem('arrs',arr);
+            localStorage.setItem('nameList',JSON.stringify(list));
+           	$(this).attr("disabled","disabled");
+           	$(".start").removeAttr("disabled");
+           })
+		})
+	</script>
+</body>
+</html>
+
